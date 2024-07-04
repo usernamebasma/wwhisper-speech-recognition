@@ -1,0 +1,42 @@
+ # Compute the spectrogram
+   # D = np.abs(librosa.stft(y, n_fft=window_size, hop_length=overlap))
+
+    # Calculate the pitch using FFT
+    #n_frames = int((len(y) - window_size) / overlap) + 1
+    #pitch_frequencies = np.zeros(n_frames)
+
+    for i in range(n_frames):
+        start = i * overlap
+        end = start + window_size
+        frame = y[start:end]
+        frame_fft = np.fft.fft(frame)
+        mag_spectrum = np.abs(frame_fft)
+        max_freq_index = np.argmax(mag_spectrum)
+        pitch_frequency = max_freq_index * sr / window_size
+
+        # Filter out pitch frequencies outside the specified range
+        if min_freq <= pitch_frequency <= max_freq:
+            pitch_frequencies[i] = pitch_frequency
+        else:
+            pitch_frequencies[i] = np.nan  # Set to NaN if outside the range
+
+    # Create a time array for the frames
+    time = np.arange(0, len(pitch_frequencies)) * (window_size - overlap) / sr
+
+    # Plot the grayscale spectrogram
+    plt.figure(figsize=(10, 6))
+    librosa.display.specshow(librosa.amplitude_to_db(D, ref=np.max), y_axis='log', x_axis='time', cmap='gray')  # Use 'gray' colormap
+    plt.colorbar(format='%+2.0f dB')
+
+    # Scatter plot the pitch information as points
+    # plt.scatter(time, pitch_frequencies, c='r', marker='.', s=5, label='Pitch Frequency (Hz)')
+    plt.plot(time, pitch_frequencies, color='r', label='Pitch Frequency (Hz)')
+
+    plt.xlim(0, len(y) / sr)
+    plt.xlabel('Time (s)')
+    plt.ylabel('Frequency (Hz)')
+    plt.title('Spectrogram with Pitch Information')
+    plt.legend(loc='upper right')
+
+    plt.tight_layout()
+    plt.show()
